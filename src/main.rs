@@ -1,24 +1,40 @@
-use macroquad::prelude::*;
 use glam::*;
+use macroquad::prelude::*;
+
+const LEG_LENGTH: f32 = 64.0;
 
 struct Spider {
     pos: Vec2,
+    legs: [Vec2; 8],
 }
 
 impl Spider {
     pub fn new() -> Self {
-        Self { pos: Vec2::new(screen_width() / 2.0, screen_height() / 2.0)  
-    }}
+        let pos = Vec2::new(screen_width() / 2.0, screen_height() / 2.0);
+
+        let mut legs: [Vec2; 8] = Default::default();
+
+        for (i, leg) in legs.iter_mut().enumerate() {
+            let deg = std::f32::consts::TAU / 8.0;
+            *leg = pos + Vec2::new(f32::cos(deg * i as f32), f32::sin(deg * i as f32)).normalize() * LEG_LENGTH;
+        }
+
+        Self {
+            pos,
+            legs,
+        }
+    }
 
     pub fn draw(&self) {
         let color = VIOLET;
         let r = 16.0;
         let t = 8.0;
-        let leg = 32.0;
 
         draw_circle(self.pos.x, self.pos.y, r, color);
 
-        line(self.pos, Vec2::new(leg, leg), t, color);
+        for leg in self.legs.iter() {
+            draw_line(self.pos.x, self.pos.y, leg.x, leg.y, t, color);
+        }
     }
 }
 
@@ -26,7 +42,7 @@ fn line(pos: Vec2, dir: Vec2, thickness: f32, color: Color) {
     draw_line(pos.x, pos.y, pos.x + dir.x, pos.y + dir.y, thickness, color);
 }
 
-#[macroquad::main("Godot BITGUN (DEBUG)")]
+#[macroquad::main("Macroquad Spider")]
 async fn main() {
     let mut f = 0.1;
 
