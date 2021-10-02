@@ -1,6 +1,8 @@
 use glam::*;
 use macroquad::prelude::*;
 
+mod shaders;
+
 const LEG_LENGTH: f32 = 64.0;
 
 struct Spider {
@@ -26,7 +28,7 @@ impl Spider {
         Self { pos, legs }
     }
 
-    pub fn draw(&mut self, _ui: &mut egui::Ui) {
+    pub fn draw(&mut self) {
         let color = VIOLET;
         let r = 16.0;
         let t = 8.0;
@@ -103,7 +105,7 @@ async fn main() {
 
     let mut spider = Spider::new();
 
-    let material = load_material(crt::VERTEX, crt::FRAGMENT, Default::default()).unwrap();
+    let material = load_material(shaders::VERTEX, shaders::FRAGMENT, Default::default()).unwrap();
 
     let orig_pos = spider.pos;
 
@@ -112,7 +114,13 @@ async fn main() {
 
     let mut i = 0.0;
 
-    const MOVE_SPIDER_AUTO: bool = true;
+    let mut use_shader = false;
+    let mut auto_move_spider = true;
+
+    let main_render_target = render_target(screen_width() as u32, screen_height() as u32);
+    main_render_target.texture.set_filter(FilterMode::Nearest);
+
+    const NICE_PINK: Color = Color::new(1.0, 0.6245, 0.7, 1.0);
 
     loop {
         if is_key_down(KeyCode::Escape) {
@@ -121,19 +129,12 @@ async fn main() {
 
         i += 1.0 / 60.0;
 
-        if MOVE_SPIDER_AUTO {
+        if auto_move_spider {
             spider.pos = orig_pos + Vec2::new(f32::sin(i), f32::cos(i)) * 80.0;
         } else {
             let mouse = mouse_position();
             spider.pos = Vec2::new(mouse.0, mouse.1);
         }
-
-        f = f32::sin(f + 0.05);
-        // clear_background(Color::new(1.0, f, 0.7, 1.0));
-        // gl_use_material(material);
-
-        clear_background(Color::new(1.0, 0.6245, 0.7, 1.0));
-
 
         egui_macroquad::ui(|ctx| {
             egui::Window::new("Window").show(ctx, |ui| {
@@ -141,76 +142,59 @@ async fn main() {
                 ui.add(egui::Slider::new(&mut spider.pos.x, move_min.x..=move_max.x).text("x"));
                 ui.add(egui::Slider::new(&mut spider.pos.y, move_min.y..=move_max.y).text("y"));
 
-                spider.draw(ui);
+                ui.checkbox(&mut use_shader, "Use shader:");
+                ui.checkbox(&mut auto_move_spider, "Auto move spider:");
             });
         });
 
+        // const SCR_W: f32 = 100.0;
+        // const SCR_H: f32 = 60.0;
+        //
+        let SCR_W = screen_width();
+        let SCR_H = screen_height();
+
+        set_camera(&Camera2D {
+            zoom: vec2(1.0 / SCR_W * 2.0, -1.0 / SCR_H * 2.0),
+            target: vec2(SCR_W / 2.0, SCR_H / 2.0),
+            render_target: Some(main_render_target),
+            ..Default::default()
+        });
+
+        clear_background(NICE_PINK);
+
+        spider.draw();
+
+        set_default_camera();
+
+        if use_shader {
+            gl_use_material(material);
+        }
+
+
+        draw_texture_ex(
+            main_render_target.texture,
+            0.0,
+            0.0,
+            NICE_PINK,
+            DrawTextureParams {
+                dest_size: Some(vec2(screen_width(), screen_height())),
+                flip_y: true,
+                ..Default::default()
+            },
+        );
+
+        gl_use_default_material();
         egui_macroquad::draw();
+
+        // clear_background(Color::new(1.0, 0.6245, 0.7, 1.0));
+
+        // draw_texture(main_render_target.texture, 0.0, 0.0, NICE_PINK);
+        // clear_background(NICE_PINK);
+        // draw_texture_ex()
+        // let screen_data: Image = get_screen_data();
 
         // println!("f = {}", f);
 
         next_frame().await;
     }
-}
-
-pub mod crt {
-    pub const FRAGMENT: &str = r#"#version 100
-        precision lowp float;
-        varying vec4 color;
-        varying vec2 uv;
-
-        uniform sampler2D Texture;
-        // https://www.shadertoy.com/view/XtlSD7
-
-        vec2 CRTCurveUV(vec2 uv)
-        {
-            uv = uv * 2.0 - 1.0;
-            vec2 offset = abs( uv.yx ) / vec2( 6.0, 4.0 );
-            uv = uv + uv * offset * offset;
-            uv = uv * 0.5 + 0.5;
-            return uv;
-        }
-        void DrawVignette( inout vec3 color, vec2 uv )
-        {
-            float vignette = uv.x * uv.y * ( 1.0 - uv.x ) * ( 1.0 - uv.y );
-            vignette = clamp( pow( 16.0 * vignette, 0.3 ), 0.0, 1.0 );
-            color *= vignette;
-        }
-        void DrawScanline( inout vec3 color, vec2 uv )
-        {
-            float iTime = 0.1;
-            float scanline = clamp( 0.95 + 0.05 * cos( 3.14 * ( uv.y + 0.008 * iTime ) * 240.0 * 1.0 ), 0.0, 1.0 );
-            float grille = 0.85 + 0.15 * clamp( 1.5 * cos( 3.14 * uv.x * 640.0 * 1.0 ), 0.0, 1.0 );
-            color *= scanline * grille * 1.2;
-        }
-        void main() {
-
-            vec2 crtUV = CRTCurveUV(uv);
-
-            vec3 res = texture2D(Texture, uv).rgb * color.rgb;
-
-            if (crtUV.x < 0.0 || crtUV.x > 1.0 || crtUV.y < 0.0 || crtUV.y > 1.0)
-            {
-                res = vec3(0.0, 0.0, 0.0);
-            }
-            DrawVignette(res, crtUV);
-            DrawScanline(res, uv);
-            gl_FragColor = vec4(res, 1.0);
-        }
-    "#;
-
-    pub const VERTEX: &str = r#"#version 100
-        attribute vec3 position;
-        attribute vec2 texcoord;
-        attribute vec4 color0;
-        varying lowp vec2 uv;
-        varying lowp vec4 color;
-        uniform mat4 Model;
-        uniform mat4 Projection;
-        void main() {
-            gl_Position = Projection * Model * vec4(position, 1);
-            color = color0 / 255.0;
-            uv = texcoord;
-        }
-    "#;
 }
