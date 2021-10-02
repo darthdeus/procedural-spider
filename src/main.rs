@@ -4,7 +4,16 @@ mod prelude;
 mod shaders;
 mod spider;
 
-#[macroquad::main("Macroquad Spider")]
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "Macroquad - Procedural Spider".to_owned(),
+        window_width: 1400,
+        window_height: 1000,
+        ..Default::default()
+    }
+}
+
+#[macroquad::main(window_conf)]
 async fn main() {
     let mut spider = Spider::new();
 
@@ -42,19 +51,20 @@ async fn main() {
         spider.move_to(new_pos);
 
         egui_macroquad::ui(|ctx| {
-            egui::Window::new("Window").show(ctx, |ui| {
-                ui.label("macroquaaad");
-                ui.add(egui::Slider::new(&mut spider.pos.x, move_min.x..=move_max.x).text("x"));
-                ui.add(egui::Slider::new(&mut spider.pos.y, move_min.y..=move_max.y).text("y"));
+            egui::Window::new("Window")
+                .show(ctx, |ui| {
+                    ui.label("macroquaaad");
+                    ui.add(egui::Slider::new(&mut spider.pos.x, move_min.x..=move_max.x).text("x"));
+                    ui.add(egui::Slider::new(&mut spider.pos.y, move_min.y..=move_max.y).text("y"));
 
-                ui.checkbox(&mut use_shader, "Use shader:");
-                ui.checkbox(&mut auto_move_spider, "Auto move spider:");
-                ui.checkbox(&mut spider.debug_leg_angles, "Debug leg angles:");
-                ui.checkbox(&mut spider.debug_color_legs, "Debug color legs:");
-                unsafe {
-                    ui.checkbox(&mut USE_QUAT, "Use quat");
-                }
-            });
+                    ui.checkbox(&mut use_shader, "Use shader:");
+                    ui.checkbox(&mut auto_move_spider, "Auto move spider:");
+                    ui.checkbox(&mut spider.debug_leg_angles, "Debug leg angles:");
+                    ui.checkbox(&mut spider.debug_color_legs, "Debug color legs:");
+                    unsafe {
+                        ui.checkbox(&mut USE_QUAT, "Use quat");
+                    }
+                });
         });
 
         // const SCR_W: f32 = 100.0;
