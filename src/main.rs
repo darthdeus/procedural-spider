@@ -161,11 +161,12 @@ async fn main() {
             ..Default::default()
         });
 
-        clear_background(NICE_PINK);
-
+        // TODO: drawing with NICE_PINK changes the color for some reason?
+        clear_background(Color::new(0.0, 0.0, 0.0, 0.0));
         spider.draw();
 
         set_default_camera();
+        clear_background(NICE_PINK);
 
         if use_shader {
             gl_use_material(material);
