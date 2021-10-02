@@ -3,6 +3,7 @@ use macroquad::prelude::*;
 
 mod shaders;
 
+const RESIZE_RATIO: f32 = 1.0;
 const LEG_LENGTH: f32 = 64.0;
 
 struct Spider {
@@ -17,7 +18,7 @@ fn leg_origin_dir(i: usize) -> Vec2 {
 
 impl Spider {
     pub fn new() -> Self {
-        let pos = Vec2::new(screen_width() / 2.0, screen_height() / 2.0);
+        let pos = Vec2::new(screen_width() / 2.0 / RESIZE_RATIO, screen_height() / 2.0 / RESIZE_RATIO);
 
         let mut legs: [Vec2; 8] = Default::default();
 
@@ -149,13 +150,13 @@ async fn main() {
 
         // const SCR_W: f32 = 100.0;
         // const SCR_H: f32 = 60.0;
-        //
-        let SCR_W = screen_width();
-        let SCR_H = screen_height();
+
+        let render_screen_w = screen_width() / RESIZE_RATIO;
+        let render_screen_h = screen_height() / RESIZE_RATIO;
 
         set_camera(&Camera2D {
-            zoom: vec2(1.0 / SCR_W * 2.0, -1.0 / SCR_H * 2.0),
-            target: vec2(SCR_W / 2.0, SCR_H / 2.0),
+            zoom: vec2(1.0 / render_screen_w * 2.0, -1.0 / render_screen_h * 2.0),
+            target: vec2(render_screen_w / 2.0, render_screen_h / 2.0),
             render_target: Some(main_render_target),
             ..Default::default()
         });
@@ -169,7 +170,6 @@ async fn main() {
         if use_shader {
             gl_use_material(material);
         }
-
 
         draw_texture_ex(
             main_render_target.texture,
