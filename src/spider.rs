@@ -135,9 +135,15 @@ impl Spider {
             COLOR,
         );
 
-        for leg in self.legs.iter() {
-            line(self.pos, leg.mid, T, COLOR);
-            line(leg.mid, leg.end, T, COLOR);
+        for (i, leg) in self.legs.iter().enumerate() {
+            let mut color = Color::new(COLOR.r, COLOR.g, COLOR.b, COLOR.a);
+
+            color.r -= i as f32 / 20.0;
+            color.g -= i as f32 / 20.0;
+            color.b -= i as f32 / 20.0;
+
+            line(self.pos, leg.mid, T, color);
+            line(leg.mid, leg.end, T, color);
 
             draw_circle(leg.mid.x, leg.mid.y, 4.0, GREEN);
             draw_circle(leg.end.x, leg.end.y, 4.0, BLUE);
