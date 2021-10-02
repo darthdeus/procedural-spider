@@ -10,6 +10,13 @@ const COLOR: Color = VIOLET;
 const R: f32 = 16.0;
 const T: f32 = 8.0;
 
+fn leg_origin_dir(face_dir: Vec2, i: usize) -> Vec2 {
+    let deg = std::f32::consts::TAU / 8.0;
+    let angle = deg * i as f32 + face_dir.angle_between(Vec2::new(0.0, -1.0));
+
+    Vec2::new(f32::cos(angle), f32::sin(angle)).normalize()
+}
+
 #[derive(Default)]
 pub struct Leg {
     // Where we want the leg to be
@@ -25,11 +32,8 @@ pub struct Spider {
     pub pos: Vec2,
     face_dir: Vec2,
     legs: [Leg; 8],
-}
 
-fn leg_origin_dir(i: usize) -> Vec2 {
-    let deg = std::f32::consts::TAU / 8.0;
-    Vec2::new(f32::cos(deg * i as f32), f32::sin(deg * i as f32)).normalize()
+    pub debug_leg_angles: bool,
 }
 
 impl Spider {
@@ -39,16 +43,19 @@ impl Spider {
             screen_height() / 2.0 / RESIZE_RATIO,
         );
 
+        let face_dir = Vec2::new(0.0, 1.0);
         let mut legs: [Leg; 8] = Default::default();
 
         for (i, leg) in legs.iter_mut().enumerate() {
-            leg.target = pos + leg_origin_dir(i) * LEG_LENGTH * 2.0;
+            leg.target = pos + leg_origin_dir(face_dir, i) * LEG_LENGTH * 2.0;
         }
 
         Self {
             pos,
-            face_dir: Vec2::new(0.0, 1.0),
+            face_dir,
             legs,
+
+            debug_leg_angles: false,
         }
     }
 
@@ -62,7 +69,7 @@ impl Spider {
 
         for (i, leg) in self.legs.iter_mut().enumerate() {
             let leg_dir = leg.end - self.pos;
-            let ideal_leg_dir = leg_origin_dir(i).normalize();
+            let ideal_leg_dir = leg_origin_dir(self.face_dir, i).normalize();
 
             if leg_dir.length() > 2.0 * LEG_LENGTH {
                 leg.end = self.pos + ideal_leg_dir * LEG_LENGTH * 1.4;
@@ -74,10 +81,12 @@ impl Spider {
 
             let angle = ideal_leg_dir.angle_between(leg_dir).abs();
 
-            root_ui().label(leg.end, &format!("angle {} = {}", i, angle));
+            if self.debug_leg_angles {
+                root_ui().label(leg.end, &format!("angle {} = {:.2}", i, angle));
+            }
 
             if angle > 0.2 {
-                leg.end = self.pos + ideal_leg_dir  * LEG_LENGTH * 1.6;
+                leg.end = self.pos + ideal_leg_dir * LEG_LENGTH * 1.6;
             }
 
             let target = (leg.end - self.pos).clamp_length(16.0, LEG_LENGTH * 2.0);

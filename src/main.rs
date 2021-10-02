@@ -33,7 +33,7 @@ async fn main() {
         i += 1.0 / 60.0;
 
         let new_pos = if auto_move_spider {
-            orig_pos + Vec2::new(f32::sin(i), f32::cos(i)) * 80.0
+            orig_pos + Vec2::new(f32::sin(i), f32::cos(2.0 * i)) * 20.0
         } else {
             let mouse = mouse_position();
             Vec2::new(mouse.0, mouse.1)
@@ -49,6 +49,7 @@ async fn main() {
 
                 ui.checkbox(&mut use_shader, "Use shader:");
                 ui.checkbox(&mut auto_move_spider, "Auto move spider:");
+                ui.checkbox(&mut spider.debug_leg_angles, "Debug leg angles:");
             });
         });
 
