@@ -12,12 +12,26 @@ const T: f32 = 8.0;
 
 const LEG_COUNT: usize = 8;
 
-fn leg_origin_dir(face_dir: Vec2, i: usize) -> Vec2 {
-    let deg = std::f32::consts::TAU / 8.0;
-    let angle = deg * i as f32 + face_dir.angle_between(Vec2::new(0.0, -1.0));
+pub static mut USE_QUAT: bool = false;
+// root_ui().label(None, &format!("angle: {}", angle));
 
-    Vec2::new(f32::cos(angle), f32::sin(angle)).normalize()
+fn leg_origin_dir(face_dir: Vec2, i: usize) -> Vec2 {
+    let deg = std::f32::consts::TAU / 10.0;
+    let angle = deg * (i + 1) as f32;
+
+    if unsafe { USE_QUAT } {
+        Mat3::from_rotation_z(angle).transform_vector2(face_dir)
+    } else {
+        // let total_angle = angle + face_dir.angle_between(Vec2::new(0.0, 1.0));
+        let total_angle = angle + Vec2::new(1.0, 0.0).angle_between(face_dir);
+
+        Vec2::new(f32::cos(total_angle), f32::sin(total_angle)).normalize()
+    }
 }
+
+// return face_dir;
+// let angle = face_dir.angle_between(Vec2::new(0.0, 1.0));
+// let angle = deg * i as f32;
 
 #[derive(Default)]
 pub struct Leg {
@@ -81,13 +95,13 @@ impl Spider {
                 leg.end = self.pos + ideal_leg_dir * LEG_LENGTH * 2.0;
             }
 
-            let angle = ideal_leg_dir.angle_between(leg_dir).abs();
+            let angle = leg_dir.angle_between(ideal_leg_dir).abs();
 
             if self.debug_leg_angles {
                 root_ui().label(leg.end, &format!("angle {} = {:.2}", i, angle));
             }
 
-            if angle > 0.2 {
+            if angle > 0.9 {
                 leg.end = self.pos + ideal_leg_dir * LEG_LENGTH * 1.6;
             }
 
@@ -103,15 +117,20 @@ impl Spider {
             let mut min_dist = d(mid, target);
             let mut min_mid = mid;
 
-            let target_dir = (leg.target - self.pos).normalize();
 
-            let a = target_dir;
-            let b = self.face_dir;
+            // TODO: use this instead of the `i` hack
+            // let target_dir = (leg.target - self.pos).normalize();
+            //
+            // let a = target_dir;
+            // let b = ideal_leg_dir;
+            // let signed_area = f32::signum(a.x * b.y - a.y * b.x);
+            // root_ui().label(leg.end, &format!("area {}", signed_area));
 
-            let signed_area = f32::signum(a.x * b.y - a.y * b.x);
+            for iter in 0..1000 {
+                // TODO: use leg count
+                let sign = if i < 4 { -1.0 } else { 1.0 };
 
-            for i in 0..1000 {
-                mid += signed_area * norm.normalize() * 0.1 * i as f32;
+                mid += sign * norm.normalize() * 0.1 * iter as f32;
 
                 let new_dist = d(mid, target);
 
@@ -135,7 +154,8 @@ impl Spider {
             COLOR,
         );
 
-        let colors = [RED, GREEN, BLUE, YELLOW, VIOLET, BLACK, PINK, PURPLE, BEIGE];
+        // let colors = [RED, GREEN, BLUE, YELLOW, VIOLET, BLACK, PINK, PURPLE, BEIGE];
+        let colors = [YELLOW, ORANGE, RED, PURPLE, BLUE, GRAY, DARKGRAY, BLACK];
 
         for (i, leg) in self.legs.iter().enumerate() {
             let mut color = Color::new(COLOR.r, COLOR.g, COLOR.b, COLOR.a);

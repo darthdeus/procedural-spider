@@ -50,6 +50,9 @@ async fn main() {
                 ui.checkbox(&mut use_shader, "Use shader:");
                 ui.checkbox(&mut auto_move_spider, "Auto move spider:");
                 ui.checkbox(&mut spider.debug_leg_angles, "Debug leg angles:");
+                unsafe {
+                    ui.checkbox(&mut USE_QUAT, "Use quat");
+                }
             });
         });
 
