@@ -10,24 +10,15 @@ const COLOR: Color = VIOLET;
 const R: f32 = 16.0;
 const T: f32 = 8.0;
 
+/// Total number of legs.
 const LEG_COUNT: usize = 8;
+/// Legs are placed on a circle, this is the extra "slots"
+/// so legs don't end up being directly in front of the face.
+const EXTRA_LEG_SPACING: usize = 2;
+/// Degree of rotation per leg.
+const LEG_DEGREE: f32 = std::f32::consts::TAU / (LEG_COUNT + EXTRA_LEG_SPACING) as f32;
 
-pub static mut USE_QUAT: bool = false;
-// root_ui().label(None, &format!("angle: {}", angle));
-
-fn leg_origin_dir(face_dir: Vec2, i: usize) -> Vec2 {
-    let deg = std::f32::consts::TAU / 10.0;
-    let angle = deg * (i + 1) as f32;
-
-    if unsafe { USE_QUAT } {
-        Mat3::from_rotation_z(angle).transform_vector2(face_dir)
-    } else {
-        // let total_angle = angle + face_dir.angle_between(Vec2::new(0.0, 1.0));
-        let total_angle = angle + Vec2::new(1.0, 0.0).angle_between(face_dir);
-
-        Vec2::new(f32::cos(total_angle), f32::sin(total_angle)).normalize()
-    }
-}
+// pub static mut USE_QUAT: bool = false;
 
 // return face_dir;
 // let angle = face_dir.angle_between(Vec2::new(0.0, 1.0));
@@ -35,7 +26,9 @@ fn leg_origin_dir(face_dir: Vec2, i: usize) -> Vec2 {
 
 #[derive(Default)]
 pub struct Leg {
-    // Where we want the leg to be
+    // Where the leg anchors to the body
+    origin: Vec2,
+    // Where we want the leg end to be
     target: Vec2,
 
     // Where it actually is
@@ -45,16 +38,33 @@ pub struct Leg {
 
     lerp_mid: Vec2,
     lerp_end: Vec2,
+
+    // Ideal direction of the leg, not taking spider's orientation into account
+    ideal_leg_dir: Vec2,
 }
 
 pub struct Spider {
     pub pos: Vec2,
     face_dir: Vec2,
-    legs: [Leg; LEG_COUNT],
+    legs: Vec<Leg>,
 
     pub debug_leg_angles: bool,
     pub debug_color_legs: bool,
 }
+
+// fn leg_origin_dir(face_dir: Vec2, i: usize) -> Vec2 {
+//     let angle = LEG_DEGREE * (i + 1) as f32;
+//
+//     if unsafe { USE_QUAT } {
+//         Mat3::from_rotation_z(angle).transform_vector2(face_dir)
+//     } else {
+//         // let total_angle = angle + face_dir.angle_between(Vec2::new(0.0, 1.0));
+//         // let total_angle = angle + Vec2::new(1.0, 0.0).angle_between(face_dir);
+//         let total_angle = angle + Vec2::new(1.0, 0.0).angle_between(face_dir);
+//
+//         Vec2::new(f32::cos(total_angle), f32::sin(total_angle)).normalize()
+//     }
+// }
 
 impl Spider {
     pub fn new() -> Self {
@@ -64,11 +74,33 @@ impl Spider {
         );
 
         let face_dir = Vec2::new(0.0, 1.0);
-        let mut legs: [Leg; LEG_COUNT] = Default::default();
 
-        for (i, leg) in legs.iter_mut().enumerate() {
-            leg.target = pos + leg_origin_dir(face_dir, i) * LEG_LENGTH * 2.0;
+        let mut legs = Vec::new();
+
+        for i in 0..LEG_COUNT {
+            // Leg's ideal target rotation, offsetby half the extra spacing.
+            // In case of extra=2 it means there's no legs in the first and last slot.
+            let angle = LEG_DEGREE * (i + EXTRA_LEG_SPACING / 2) as f32;
+
+            let ideal_leg_dir = Mat3::from_rotation_z(angle)
+                .transform_vector2(face_dir)
+                .normalize();
+
+            let mid_count = LEG_COUNT as f32 / 2.0;
+
+            legs.push(Leg {
+                origin: pos + ideal_leg_dir * (mid_count - i as f32).abs(),
+                target: pos + ideal_leg_dir * LEG_LENGTH * 2.0,
+
+                ideal_leg_dir,
+
+                ..Default::default()
+            });
+            // for (i, leg) in legs.iter_mut().enumerate() {
+            //     leg.target = pos + leg_origin_dir(face_dir, i) * LEG_LENGTH * 2.0;
+            // }
         }
+        // let mut legs: [Leg; LEG_COUNT] = Default::default();
 
         Self {
             pos,
@@ -80,17 +112,25 @@ impl Spider {
         }
     }
 
+    /// Returns a rotation transform in the direction the spider is facing.
+    pub fn face_transform(&self) -> Mat3 {
+        Mat3::from_rotation_z(Vec2::new(0.0, 1.0).angle_between(self.face_dir))
+    }
+
     pub fn move_to(&mut self, new_pos: Vec2) {
         let new_face_dir = new_pos - self.pos;
         if new_face_dir.length() > 0.01 {
-            self.face_dir = 0.9 * self.face_dir + 0.1 * new_face_dir.normalize();
+            self.face_dir = (0.9 * self.face_dir + 0.1 * new_face_dir.normalize()).normalize();
         }
 
         self.pos = new_pos;
 
+        let face_transform = self.face_transform();
+
         for (i, leg) in self.legs.iter_mut().enumerate() {
             let leg_dir = leg.end - self.pos;
-            let ideal_leg_dir = leg_origin_dir(self.face_dir, i).normalize();
+            // let ideal_leg_dir = leg_origin_dir(self.face_dir, i).normalize();
+            let ideal_leg_dir = face_transform.transform_vector2(leg.ideal_leg_dir);
 
             if leg_dir.length() > 2.0 * LEG_LENGTH {
                 leg.end = self.pos + ideal_leg_dir * LEG_LENGTH * 1.4;
@@ -162,8 +202,9 @@ impl Spider {
         let colors = [YELLOW, ORANGE, RED, PURPLE, BLUE, GRAY, DARKGRAY, BLACK];
 
         for (i, leg) in self.legs.iter_mut().enumerate() {
-            leg.lerp_mid = leg.lerp_mid.lerp(leg.mid, 0.5);
-            leg.lerp_end = leg.lerp_end.lerp(leg.end, 0.5);
+            let lerp_speed = 0.5;
+            leg.lerp_mid = leg.lerp_mid.lerp(leg.mid, lerp_speed);
+            leg.lerp_end = leg.lerp_end.lerp(leg.end, lerp_speed);
 
             let color = if self.debug_color_legs {
                 //             let mut color = Color::new(COLOR.r, COLOR.g, COLOR.b, COLOR.a);

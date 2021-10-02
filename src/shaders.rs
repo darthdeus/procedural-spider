@@ -40,18 +40,23 @@ pub const FRAGMENT: &str = r#"#version 100
 
             // vec2 crtUV = CRTCurveUV(uv);
 
-            vec2 pixel_uv = floor(uv / 16.0) * 16.0;
+            // vec2 pixel_uv = floor(uv / 16.0) * 16.0;
 
-            vec3 res = texture2D(Texture, pixel_uv).rgb * color.rgb;
+            vec3 res = texture2D(Texture, uv.xy).rgb * color.rgb;
+            // vec3 res = texture2D(Texture, pixel_uv).rgb * color.rgb;
 
             // if (crtUV.x < 0.0 || crtUV.x > 1.0 || crtUV.y < 0.0 || crtUV.y > 1.0)
             // {
             //     res = vec3(0.0, 0.0, 0.0);
             // }
 
-            // DrawVignette(res, crtUV);
+            DrawVignette(res, uv);
             // DrawScanline(res, uv);
             gl_FragColor = vec4(res, 1.0);
+
+            if (gl_FragColor.xyz == vec3(0.0, 0.0, 0.0)) {
+                gl_FragColor = vec4(1.0, 0.6245, 0.7, 1.0);
+            }
             // gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
         }
     "#;
