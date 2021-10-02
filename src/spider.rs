@@ -80,7 +80,7 @@ impl Spider {
     pub fn move_to(&mut self, new_pos: Vec2) {
         let new_face_dir = new_pos - self.pos;
         if new_face_dir.length() > 0.01 {
-            self.face_dir = new_face_dir.normalize();
+            self.face_dir = 0.9 * self.face_dir + 0.1 * new_face_dir.normalize();
         }
 
         self.pos = new_pos;
