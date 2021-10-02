@@ -6,7 +6,7 @@ const LEG_LENGTH: f32 = 64.0;
 const BUTT_OFFSET: f32 = 32.0;
 const BUTT_RADIUS: f32 = 32.0;
 
-const COLOR: Color = VIOLET;
+const BODY_COLOR: Color = VIOLET;
 const R: f32 = 16.0;
 const T: f32 = 8.0;
 
@@ -50,6 +50,7 @@ pub struct Spider {
 
     pub debug_leg_angles: bool,
     pub debug_color_legs: bool,
+    pub debug_draw_joints: bool,
 }
 
 // fn leg_origin_dir(face_dir: Vec2, i: usize) -> Vec2 {
@@ -111,6 +112,7 @@ impl Spider {
 
             debug_leg_angles: false,
             debug_color_legs: false,
+            debug_draw_joints: false,
         }
     }
 
@@ -158,10 +160,10 @@ impl Spider {
             let norm = mid.perp();
 
             let d = |origin: Vec2, a: Vec2, b: Vec2| {
-                f32::abs(a.length() - LEG_LENGTH + (b - a).length() - LEG_LENGTH)
+                f32::abs((origin - a).length() - LEG_LENGTH + (b - a).length() - LEG_LENGTH)
             };
 
-            let mut min_dist = d(self.pos, mid, target);
+            let mut min_dist = d(leg.origin_offset, mid, target);
             let mut min_mid = mid;
 
             // TODO: use this instead of the `i` hack
@@ -178,7 +180,7 @@ impl Spider {
 
                 mid += sign * norm.normalize() * 0.1 * iter as f32;
 
-                let new_dist = d(self.pos, mid, target);
+                let new_dist = d(leg.origin_offset, mid, target);
 
                 if new_dist < min_dist {
                     min_dist = new_dist;
@@ -192,12 +194,12 @@ impl Spider {
     }
 
     pub fn draw(&mut self) {
-        draw_circle(self.pos.x, self.pos.y, R, COLOR);
+        draw_circle(self.pos.x, self.pos.y, R, BODY_COLOR);
         draw_circle(
             self.pos.x - self.face_dir.x * BUTT_OFFSET,
             self.pos.y - self.face_dir.y * BUTT_OFFSET,
             BUTT_RADIUS,
-            COLOR,
+            BODY_COLOR,
         );
 
         // let colors = [RED, GREEN, BLUE, YELLOW, VIOLET, BLACK, PINK, PURPLE, BEIGE];
@@ -217,14 +219,20 @@ impl Spider {
 
                 colors[i]
             } else {
-                COLOR
+                BODY_COLOR
             };
 
             line(self.pos + leg.origin_offset, leg.lerp_mid, T, color);
             line(leg.lerp_mid, leg.lerp_end, T, color);
 
-            draw_circle(leg.lerp_mid.x, leg.lerp_mid.y, 4.0, GREEN);
-            draw_circle(leg.lerp_end.x, leg.lerp_end.y, 4.0, BLUE);
+            let (c1, c2) = if self.debug_draw_joints {
+                (GREEN, BLUE)
+            } else {
+                (BODY_COLOR, BODY_COLOR)
+            };
+
+            draw_circle(leg.lerp_mid.x, leg.lerp_mid.y, 4.0, c1);
+            draw_circle(leg.lerp_end.x, leg.lerp_end.y, 4.0, c2);
         }
 
         // draw_line(self.pos.x, self.pos.y, min_mid.x, min_mid.y, t, color);

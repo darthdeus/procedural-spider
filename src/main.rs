@@ -26,7 +26,7 @@ async fn main() {
 
     let mut i = 0.0;
 
-    let mut use_shader = true;
+    let mut use_shader = false;
     let mut auto_move_spider = true;
 
     let main_render_target = render_target(screen_width() as u32, screen_height() as u32);
@@ -65,9 +65,7 @@ async fn main() {
                     ui.checkbox(&mut auto_move_spider, "Auto move spider:");
                     ui.checkbox(&mut spider.debug_leg_angles, "Debug leg angles:");
                     ui.checkbox(&mut spider.debug_color_legs, "Debug color legs:");
-                    // unsafe {
-                    //     ui.checkbox(&mut USE_QUAT, "Use quat");
-                    // }
+                    ui.checkbox(&mut spider.debug_draw_joints, "Debug draw joints:");
                 });
         });
 
