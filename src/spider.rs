@@ -53,18 +53,31 @@ impl Spider {
     }
 
     pub fn move_to(&mut self, new_pos: Vec2) {
-        self.face_dir = (new_pos - self.pos).normalize();
+        let new_face_dir = new_pos - self.pos;
+        if new_face_dir.length() > 0.01 {
+            self.face_dir = new_face_dir.normalize();
+        }
+
         self.pos = new_pos;
 
         for (i, leg) in self.legs.iter_mut().enumerate() {
             let leg_dir = leg.end - self.pos;
+            let ideal_leg_dir = leg_origin_dir(i).normalize();
 
             if leg_dir.length() > 2.0 * LEG_LENGTH {
-                leg.end = self.pos + leg_origin_dir(i).normalize() * LEG_LENGTH * 1.4;
+                leg.end = self.pos + ideal_leg_dir * LEG_LENGTH * 1.4;
             }
 
             if leg_dir.length() < 1.2 * LEG_LENGTH {
-                leg.end = self.pos + leg_origin_dir(i).normalize() * LEG_LENGTH * 2.0;
+                leg.end = self.pos + ideal_leg_dir * LEG_LENGTH * 2.0;
+            }
+
+            let angle = ideal_leg_dir.angle_between(leg_dir).abs();
+
+            root_ui().label(leg.end, &format!("angle {} = {}", i, angle));
+
+            if angle > 0.2 {
+                leg.end = self.pos + ideal_leg_dir  * LEG_LENGTH * 1.6;
             }
 
             let target = (leg.end - self.pos).clamp_length(16.0, LEG_LENGTH * 2.0);
@@ -79,8 +92,15 @@ impl Spider {
             let mut min_dist = d(mid, target);
             let mut min_mid = mid;
 
+            let target_dir = (leg.target - self.pos).normalize();
+
+            let a = target_dir;
+            let b = self.face_dir;
+
+            let signed_area = f32::signum(a.x * b.y - a.y * b.x);
+
             for i in 0..1000 {
-                mid += norm.normalize() * 0.1 * i as f32;
+                mid += signed_area * norm.normalize() * 0.1 * i as f32;
 
                 let new_dist = d(mid, target);
 
