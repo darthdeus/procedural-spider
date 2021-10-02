@@ -135,12 +135,16 @@ impl Spider {
             COLOR,
         );
 
+        let colors = [RED, GREEN, BLUE, YELLOW, VIOLET, BLACK, PINK, PURPLE, BEIGE];
+
         for (i, leg) in self.legs.iter().enumerate() {
             let mut color = Color::new(COLOR.r, COLOR.g, COLOR.b, COLOR.a);
 
             color.r -= i as f32 / 20.0;
             color.g -= i as f32 / 20.0;
             color.b -= i as f32 / 20.0;
+
+            color = colors[i];
 
             line(self.pos, leg.mid, T, color);
             line(leg.mid, leg.end, T, color);
