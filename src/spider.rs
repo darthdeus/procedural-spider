@@ -27,7 +27,7 @@ const LEG_DEGREE: f32 = std::f32::consts::TAU / (LEG_COUNT + EXTRA_LEG_SPACING) 
 #[derive(Default)]
 pub struct Leg {
     // Where the leg anchors to the body
-    origin: Vec2,
+    origin_offset: Vec2,
     // Where we want the leg end to be
     target: Vec2,
 
@@ -88,8 +88,10 @@ impl Spider {
 
             let mid_count = LEG_COUNT as f32 / 2.0;
 
+            let origin_offset_len = (mid_count - (i + 1) as f32).abs() * 1.0;
+
             legs.push(Leg {
-                origin: pos + ideal_leg_dir * (mid_count - i as f32).abs(),
+                origin_offset: ideal_leg_dir * origin_offset_len,
                 target: pos + ideal_leg_dir * LEG_LENGTH * 2.0,
 
                 ideal_leg_dir,
@@ -155,11 +157,11 @@ impl Spider {
             let mut mid = target / 2.0;
             let norm = mid.perp();
 
-            let d = |a: Vec2, b: Vec2| {
+            let d = |origin: Vec2, a: Vec2, b: Vec2| {
                 f32::abs(a.length() - LEG_LENGTH + (b - a).length() - LEG_LENGTH)
             };
 
-            let mut min_dist = d(mid, target);
+            let mut min_dist = d(self.pos, mid, target);
             let mut min_mid = mid;
 
             // TODO: use this instead of the `i` hack
@@ -176,7 +178,7 @@ impl Spider {
 
                 mid += sign * norm.normalize() * 0.1 * iter as f32;
 
-                let new_dist = d(mid, target);
+                let new_dist = d(self.pos, mid, target);
 
                 if new_dist < min_dist {
                     min_dist = new_dist;
@@ -218,7 +220,7 @@ impl Spider {
                 COLOR
             };
 
-            line(self.pos, leg.lerp_mid, T, color);
+            line(self.pos + leg.origin_offset, leg.lerp_mid, T, color);
             line(leg.lerp_mid, leg.lerp_end, T, color);
 
             draw_circle(leg.lerp_mid.x, leg.lerp_mid.y, 4.0, GREEN);

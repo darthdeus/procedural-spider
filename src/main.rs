@@ -17,7 +17,7 @@ fn window_conf() -> Conf {
 async fn main() {
     let mut spider = Spider::new();
 
-    let material = load_material(shaders::VERTEX, shaders::FRAGMENT, Default::default()).unwrap();
+    let crt_material = load_material(shaders::crt::VERTEX, shaders::crt::FRAGMENT, Default::default()).unwrap();
 
     let orig_pos = spider.pos;
 
@@ -31,6 +31,10 @@ async fn main() {
 
     let main_render_target = render_target(screen_width() as u32, screen_height() as u32);
     main_render_target.texture.set_filter(FilterMode::Nearest);
+
+    let spider_render_target = render_target(screen_width() as u32, screen_height() as u32);
+    spider_render_target.texture.set_filter(FilterMode::Nearest);
+
 
     const NICE_PINK: Color = Color::new(1.0, 0.6245, 0.7, 1.0);
 
@@ -80,22 +84,30 @@ async fn main() {
             ..Default::default()
         });
 
+        set_camera(&Camera2D {
+            zoom: vec2(1.0 / render_screen_w * 2.0, -1.0 / render_screen_h * 2.0),
+            target: vec2(render_screen_w / 2.0, render_screen_h / 2.0),
+            render_target: Some(main_render_target),
+            ..Default::default()
+        });
+
         // TODO: drawing with NICE_PINK changes the color for some reason?
-        clear_background(Color::new(0.0, 0.0, 0.0, 0.0));
+        // clear_background(Color::new(0.0, 0.0, 0.0, 0.0));
+        clear_background(NICE_PINK);
         spider.draw();
 
         set_default_camera();
-        clear_background(NICE_PINK);
+        clear_background(BLACK);
 
         if use_shader {
-            gl_use_material(material);
+            gl_use_material(crt_material);
         }
 
         draw_texture_ex(
             main_render_target.texture,
             0.0,
             0.0,
-            NICE_PINK,
+            WHITE,
             DrawTextureParams {
                 dest_size: Some(vec2(screen_width(), screen_height())),
                 flip_y: true,
