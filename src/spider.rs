@@ -3,9 +3,28 @@ use crate::prelude::*;
 pub const RESIZE_RATIO: f32 = 1.0;
 const LEG_LENGTH: f32 = 64.0;
 
+const BUTT_OFFSET: f32 = 32.0;
+const BUTT_RADIUS: f32 = 32.0;
+
+const COLOR: Color = VIOLET;
+const R: f32 = 16.0;
+const T: f32 = 8.0;
+
+#[derive(Default)]
+pub struct Leg {
+    // Where we want the leg to be
+    target: Vec2,
+
+    // Where it actually is
+    end: Vec2,
+    // Where the middle joint is
+    mid: Vec2,
+}
+
 pub struct Spider {
     pub pos: Vec2,
-    legs: [Vec2; 8],
+    face_dir: Vec2,
+    legs: [Leg; 8],
 }
 
 fn leg_origin_dir(i: usize) -> Vec2 {
@@ -15,36 +34,40 @@ fn leg_origin_dir(i: usize) -> Vec2 {
 
 impl Spider {
     pub fn new() -> Self {
-        let pos = Vec2::new(screen_width() / 2.0 / RESIZE_RATIO, screen_height() / 2.0 / RESIZE_RATIO);
+        let pos = Vec2::new(
+            screen_width() / 2.0 / RESIZE_RATIO,
+            screen_height() / 2.0 / RESIZE_RATIO,
+        );
 
-        let mut legs: [Vec2; 8] = Default::default();
+        let mut legs: [Leg; 8] = Default::default();
 
         for (i, leg) in legs.iter_mut().enumerate() {
-            *leg = pos + leg_origin_dir(i) * LEG_LENGTH * 2.0;
+            leg.target = pos + leg_origin_dir(i) * LEG_LENGTH * 2.0;
         }
 
-        Self { pos, legs }
+        Self {
+            pos,
+            face_dir: Vec2::new(0.0, 1.0),
+            legs,
+        }
     }
 
-    pub fn draw(&mut self) {
-        let color = VIOLET;
-        let r = 16.0;
-        let t = 8.0;
-
-        draw_circle(self.pos.x, self.pos.y, r, color);
+    pub fn move_to(&mut self, new_pos: Vec2) {
+        self.face_dir = (new_pos - self.pos).normalize();
+        self.pos = new_pos;
 
         for (i, leg) in self.legs.iter_mut().enumerate() {
-            let leg_dir = *leg - self.pos;
+            let leg_dir = leg.end - self.pos;
 
             if leg_dir.length() > 2.0 * LEG_LENGTH {
-                *leg = self.pos + leg_origin_dir(i).normalize() * LEG_LENGTH * 1.4;
+                leg.end = self.pos + leg_origin_dir(i).normalize() * LEG_LENGTH * 1.4;
             }
 
             if leg_dir.length() < 1.2 * LEG_LENGTH {
-                *leg = self.pos + leg_origin_dir(i).normalize() * LEG_LENGTH * 2.0;
+                leg.end = self.pos + leg_origin_dir(i).normalize() * LEG_LENGTH * 2.0;
             }
 
-            let target = (*leg - self.pos).clamp_length(16.0, LEG_LENGTH * 2.0);
+            let target = (leg.end - self.pos).clamp_length(16.0, LEG_LENGTH * 2.0);
 
             let mut mid = target / 2.0;
             let norm = mid.perp();
@@ -67,29 +90,40 @@ impl Spider {
                 }
             }
 
-            let a = self.pos;
-            let b = self.pos + min_mid;
-            let c = self.pos + target;
-
-            line(a, b, t, color);
-            line(b, c, t, color);
-
-            draw_circle(b.x, b.y, 4.0, GREEN);
-            draw_circle(c.x, c.y, 4.0, BLUE);
-
-            // draw_line(self.pos.x, self.pos.y, min_mid.x, min_mid.y, t, color);
-            // draw_line(
-            //     self.pos.x + min_mid.x,
-            //     self.pos.y + min_mid.y,
-            //     target.x,
-            //     target.y,
-            //     t,
-            //     color,
-            // );
-            // draw_line(self.pos.x, self.pos.y, leg.x, leg.y, t, color);
-
-            // draw_line(self.pos.x, self.pos.y, leg.x, leg.y, t, color);
+            leg.mid = self.pos + min_mid;
+            leg.end = self.pos + target;
         }
+    }
+
+    pub fn draw(&mut self) {
+        draw_circle(self.pos.x, self.pos.y, R, COLOR);
+        draw_circle(
+            self.pos.x - self.face_dir.x * BUTT_OFFSET,
+            self.pos.y - self.face_dir.y * BUTT_OFFSET,
+            BUTT_RADIUS,
+            COLOR,
+        );
+
+        for leg in self.legs.iter() {
+            line(self.pos, leg.mid, T, COLOR);
+            line(leg.mid, leg.end, T, COLOR);
+
+            draw_circle(leg.mid.x, leg.mid.y, 4.0, GREEN);
+            draw_circle(leg.end.x, leg.end.y, 4.0, BLUE);
+        }
+
+        // draw_line(self.pos.x, self.pos.y, min_mid.x, min_mid.y, t, color);
+        // draw_line(
+        //     self.pos.x + min_mid.x,
+        //     self.pos.y + min_mid.y,
+        //     target.x,
+        //     target.y,
+        //     t,
+        //     color,
+        // );
+        // draw_line(self.pos.x, self.pos.y, leg.x, leg.y, t, color);
+
+        // draw_line(self.pos.x, self.pos.y, leg.x, leg.y, t, color);
     }
 }
 

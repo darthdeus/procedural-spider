@@ -4,8 +4,6 @@ mod prelude;
 mod shaders;
 mod spider;
 
-pub const RESIZE_RATIO: f32 = 1.0;
-
 #[macroquad::main("Macroquad Spider")]
 async fn main() {
     let mut spider = Spider::new();
@@ -34,12 +32,14 @@ async fn main() {
 
         i += 1.0 / 60.0;
 
-        if auto_move_spider {
-            spider.pos = orig_pos + Vec2::new(f32::sin(i), f32::cos(i)) * 80.0;
+        let new_pos = if auto_move_spider {
+            orig_pos + Vec2::new(f32::sin(i), f32::cos(i)) * 80.0
         } else {
             let mouse = mouse_position();
-            spider.pos = Vec2::new(mouse.0, mouse.1);
-        }
+            Vec2::new(mouse.0, mouse.1)
+        };
+
+        spider.move_to(new_pos);
 
         egui_macroquad::ui(|ctx| {
             egui::Window::new("Window").show(ctx, |ui| {
