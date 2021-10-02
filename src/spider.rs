@@ -6,7 +6,8 @@ const LEG_LENGTH: f32 = 64.0;
 const BUTT_OFFSET: f32 = 32.0;
 const BUTT_RADIUS: f32 = 32.0;
 
-const BODY_COLOR: Color = VIOLET;
+const BODY_COLOR: Color = Color::new(0.6, 0.4245, 0.4, 1.0);
+// const BODY_COLOR: Color = VIOLET;
 const R: f32 = 16.0;
 const T: f32 = 8.0;
 
