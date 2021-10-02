@@ -42,6 +42,9 @@ pub struct Leg {
     end: Vec2,
     // Where the middle joint is
     mid: Vec2,
+
+    lerp_mid: Vec2,
+    lerp_end: Vec2,
 }
 
 pub struct Spider {
@@ -158,7 +161,10 @@ impl Spider {
         // let colors = [RED, GREEN, BLUE, YELLOW, VIOLET, BLACK, PINK, PURPLE, BEIGE];
         let colors = [YELLOW, ORANGE, RED, PURPLE, BLUE, GRAY, DARKGRAY, BLACK];
 
-        for (i, leg) in self.legs.iter().enumerate() {
+        for (i, leg) in self.legs.iter_mut().enumerate() {
+            leg.lerp_mid = leg.lerp_mid.lerp(leg.mid, 0.5);
+            leg.lerp_end = leg.lerp_end.lerp(leg.end, 0.5);
+
             let color = if self.debug_color_legs {
                 //             let mut color = Color::new(COLOR.r, COLOR.g, COLOR.b, COLOR.a);
                 //
@@ -171,11 +177,11 @@ impl Spider {
                 COLOR
             };
 
-            line(self.pos, leg.mid, T, color);
-            line(leg.mid, leg.end, T, color);
+            line(self.pos, leg.lerp_mid, T, color);
+            line(leg.lerp_mid, leg.lerp_end, T, color);
 
-            draw_circle(leg.mid.x, leg.mid.y, 4.0, GREEN);
-            draw_circle(leg.end.x, leg.end.y, 4.0, BLUE);
+            draw_circle(leg.lerp_mid.x, leg.lerp_mid.y, 4.0, GREEN);
+            draw_circle(leg.lerp_end.x, leg.lerp_end.y, 4.0, BLUE);
         }
 
         // draw_line(self.pos.x, self.pos.y, min_mid.x, min_mid.y, t, color);
