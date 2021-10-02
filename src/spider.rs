@@ -50,6 +50,7 @@ pub struct Spider {
     legs: [Leg; LEG_COUNT],
 
     pub debug_leg_angles: bool,
+    pub debug_color_legs: bool,
 }
 
 impl Spider {
@@ -72,6 +73,7 @@ impl Spider {
             legs,
 
             debug_leg_angles: false,
+            debug_color_legs: false,
         }
     }
 
@@ -117,7 +119,6 @@ impl Spider {
             let mut min_dist = d(mid, target);
             let mut min_mid = mid;
 
-
             // TODO: use this instead of the `i` hack
             // let target_dir = (leg.target - self.pos).normalize();
             //
@@ -158,13 +159,17 @@ impl Spider {
         let colors = [YELLOW, ORANGE, RED, PURPLE, BLUE, GRAY, DARKGRAY, BLACK];
 
         for (i, leg) in self.legs.iter().enumerate() {
-            let mut color = Color::new(COLOR.r, COLOR.g, COLOR.b, COLOR.a);
+            let color = if self.debug_color_legs {
+                //             let mut color = Color::new(COLOR.r, COLOR.g, COLOR.b, COLOR.a);
+                //
+                //             color.r -= i as f32 / 20.0;
+                //             color.g -= i as f32 / 20.0;
+                //             color.b -= i as f32 / 20.0;
 
-            color.r -= i as f32 / 20.0;
-            color.g -= i as f32 / 20.0;
-            color.b -= i as f32 / 20.0;
-
-            color = colors[i];
+                colors[i]
+            } else {
+                COLOR
+            };
 
             line(self.pos, leg.mid, T, color);
             line(leg.mid, leg.end, T, color);
