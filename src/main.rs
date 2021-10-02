@@ -60,12 +60,13 @@ async fn main() {
                     ui.label("macroquaaad");
                     ui.add(egui::Slider::new(&mut spider.pos.x, move_min.x..=move_max.x).text("x"));
                     ui.add(egui::Slider::new(&mut spider.pos.y, move_min.y..=move_max.y).text("y"));
+                    ui.add(egui::Slider::new(&mut spider.max_leg_angle, 0.05..=3.0).text("Max leg angle:"));
 
-                    ui.checkbox(&mut use_shader, "Use shader:");
-                    ui.checkbox(&mut auto_move_spider, "Auto move spider:");
-                    ui.checkbox(&mut spider.debug_leg_angles, "Debug leg angles:");
-                    ui.checkbox(&mut spider.debug_color_legs, "Debug color legs:");
-                    ui.checkbox(&mut spider.debug_draw_joints, "Debug draw joints:");
+                    ui.checkbox(&mut use_shader, "Use shader");
+                    ui.checkbox(&mut auto_move_spider, "Auto move spider");
+                    ui.checkbox(&mut spider.debug_leg_angles, "Debug leg angles");
+                    ui.checkbox(&mut spider.debug_color_legs, "Debug color legs");
+                    ui.checkbox(&mut spider.debug_draw_joints, "Debug draw joints");
                 });
         });
 

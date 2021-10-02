@@ -48,6 +48,8 @@ pub struct Spider {
     face_dir: Vec2,
     legs: Vec<Leg>,
 
+    pub max_leg_angle: f32,
+
     pub debug_leg_angles: bool,
     pub debug_color_legs: bool,
     pub debug_draw_joints: bool,
@@ -110,6 +112,8 @@ impl Spider {
             face_dir,
             legs,
 
+            max_leg_angle: 0.6,
+
             debug_leg_angles: false,
             debug_color_legs: false,
             debug_draw_joints: false,
@@ -137,11 +141,11 @@ impl Spider {
             let ideal_leg_dir = face_transform.transform_vector2(leg.ideal_leg_dir);
 
             if leg_dir.length() > 2.0 * LEG_LENGTH {
-                leg.end = self.pos + ideal_leg_dir * LEG_LENGTH * 1.4;
+                leg.target = self.pos + ideal_leg_dir * LEG_LENGTH * 1.4;
             }
 
             if leg_dir.length() < 1.2 * LEG_LENGTH {
-                leg.end = self.pos + ideal_leg_dir * LEG_LENGTH * 2.0;
+                leg.target = self.pos + ideal_leg_dir * LEG_LENGTH * 2.0;
             }
 
             let angle = leg_dir.angle_between(ideal_leg_dir).abs();
@@ -150,11 +154,11 @@ impl Spider {
                 root_ui().label(leg.end, &format!("angle {} = {:.2}", i, angle));
             }
 
-            if angle > 0.9 {
+            if angle > self.max_leg_angle {
                 leg.end = self.pos + ideal_leg_dir * LEG_LENGTH * 1.6;
             }
 
-            let target = (leg.end - self.pos).clamp_length(16.0, LEG_LENGTH * 2.0);
+            let target = (leg.target - self.pos).clamp_length(16.0, LEG_LENGTH * 2.0);
 
             let mut mid = target / 2.0;
             let norm = mid.perp();
