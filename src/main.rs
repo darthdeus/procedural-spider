@@ -33,7 +33,7 @@ async fn main() {
         i += 1.0 / 60.0;
 
         let new_pos = if auto_move_spider {
-            orig_pos + Vec2::new(f32::sin(i), f32::cos(2.0 * i)) * 20.0
+            orig_pos + Vec2::new(4.0 * f32::sin(i), 2.0 * f32::cos(i)) * 20.0
         } else {
             let mouse = mouse_position();
             Vec2::new(mouse.0, mouse.1)

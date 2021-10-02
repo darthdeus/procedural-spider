@@ -10,6 +10,8 @@ const COLOR: Color = VIOLET;
 const R: f32 = 16.0;
 const T: f32 = 8.0;
 
+const LEG_COUNT: usize = 8;
+
 fn leg_origin_dir(face_dir: Vec2, i: usize) -> Vec2 {
     let deg = std::f32::consts::TAU / 8.0;
     let angle = deg * i as f32 + face_dir.angle_between(Vec2::new(0.0, -1.0));
@@ -31,7 +33,7 @@ pub struct Leg {
 pub struct Spider {
     pub pos: Vec2,
     face_dir: Vec2,
-    legs: [Leg; 8],
+    legs: [Leg; LEG_COUNT],
 
     pub debug_leg_angles: bool,
 }
@@ -44,7 +46,7 @@ impl Spider {
         );
 
         let face_dir = Vec2::new(0.0, 1.0);
-        let mut legs: [Leg; 8] = Default::default();
+        let mut legs: [Leg; LEG_COUNT] = Default::default();
 
         for (i, leg) in legs.iter_mut().enumerate() {
             leg.target = pos + leg_origin_dir(face_dir, i) * LEG_LENGTH * 2.0;
