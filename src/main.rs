@@ -49,6 +49,28 @@ async fn main() {
         ),
     ];
 
+    let soundtrack = include_bytes!("soundtrack.wav");
+
+    let sound = macroquad::audio::load_sound_from_bytes(soundtrack).await;
+
+    match sound {
+        Ok(sound) => {
+            println!("playing music");
+
+            macroquad::audio::play_sound(
+                sound,
+                macroquad::audio::PlaySoundParams {
+                    looped: true,
+                    volume: 1.0,
+                },
+            );
+        }
+
+        Err(err) => {
+            println!("Failed to load sound {}", err);
+        }
+    }
+
     let crt_material =
         load_material(shaders::VERTEX, shaders::FRAGMENT, Default::default()).unwrap();
 
