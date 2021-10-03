@@ -3,10 +3,11 @@ use crate::prelude::*;
 pub const RESIZE_RATIO: f32 = 1.0;
 const LEG_LENGTH: f32 = 64.0;
 
+const MOVE_SPEED: f32 = 30.0;
 const BUTT_OFFSET: f32 = 32.0;
 const BUTT_RADIUS: f32 = 32.0;
 
-const BODY_COLOR: Color = Color::new(0.6, 0.4245, 0.4, 1.0);
+const BODY_COLOR: Color = Color::new(0.8, 0.4245, 0.4, 1.0);
 // const BODY_COLOR: Color = VIOLET;
 const R: f32 = 16.0;
 const T: f32 = 8.0;
@@ -25,7 +26,7 @@ const LEG_DEGREE: f32 = std::f32::consts::TAU / (LEG_COUNT + EXTRA_LEG_SPACING) 
 // let angle = face_dir.angle_between(Vec2::new(0.0, 1.0));
 // let angle = deg * i as f32;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Leg {
     // Where the leg anchors to the body
     origin_offset: Vec2,
@@ -44,8 +45,11 @@ pub struct Leg {
     ideal_leg_dir: Vec2,
 }
 
+#[derive(Debug)]
 pub struct Spider {
     pub pos: Vec2,
+    velocity: Vec2,
+
     face_dir: Vec2,
     legs: Vec<Leg>,
 
@@ -110,6 +114,8 @@ impl Spider {
 
         Self {
             pos,
+            velocity: Vec2::ZERO,
+
             face_dir,
             legs,
 
@@ -126,13 +132,20 @@ impl Spider {
         Mat3::from_rotation_z(Vec2::new(0.0, 1.0).angle_between(self.face_dir))
     }
 
-    pub fn move_to(&mut self, new_pos: Vec2) {
-        let new_face_dir = new_pos - self.pos;
-        if new_face_dir.length() > 0.01 {
-            self.face_dir = (0.9 * self.face_dir + 0.1 * new_face_dir.normalize()).normalize();
+    pub fn move_towards(&mut self, move_dir: Vec2) {
+        if move_dir.length() > 0.1 {
+            self.velocity += move_dir.normalize() * MOVE_SPEED * get_frame_time();
         }
 
-        self.pos = new_pos;
+        self.velocity = self.velocity.clamp_length_max(5.0);
+
+        self.pos += self.velocity;
+        self.velocity *= 0.90;
+
+        if self.velocity.length() > 0.01 {
+            self.face_dir = self.face_dir.lerp(self.velocity.normalize(), 0.5);
+        //     self.face_dir = (0.8 * self.face_dir + 0.2 * self.velocity.normalize()).normalize();
+        }
 
         let face_transform = self.face_transform();
 
