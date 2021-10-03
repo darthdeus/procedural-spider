@@ -44,7 +44,7 @@ async fn main() {
     let mut i = 0.0;
 
     let mut debug_keyboard_override = false;
-    let mut use_shader = false;
+    let mut use_shader = true;
     let mut auto_move_spider = true;
     let mut debug_ui = false;
 
