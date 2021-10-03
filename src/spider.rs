@@ -7,7 +7,6 @@ const BUTT_OFFSET: f32 = 32.0;
 const BUTT_RADIUS: f32 = 32.0;
 
 const BODY_COLOR: Color = Color::new(0.8, 0.4245, 0.4, 1.0);
-// const BODY_COLOR: Color = VIOLET;
 const R: f32 = 16.0;
 const T: f32 = 8.0;
 
@@ -20,11 +19,6 @@ const EXTRA_LEG_SPACING: usize = 2;
 const LEG_DEGREE: f32 = std::f32::consts::TAU / (LEG_COUNT + EXTRA_LEG_SPACING) as f32;
 
 pub static mut DEBUG_AI_LABELS: bool = false;
-// pub static mut USE_QUAT: bool = false;
-
-// return face_dir;
-// let angle = face_dir.angle_between(Vec2::new(0.0, 1.0));
-// let angle = deg * i as f32;
 
 #[derive(Default, Debug)]
 pub struct Leg {
@@ -104,11 +98,7 @@ impl Spider {
 
                 ..Default::default()
             });
-            // for (i, leg) in legs.iter_mut().enumerate() {
-            //     leg.target = pos + leg_origin_dir(face_dir, i) * LEG_LENGTH * 2.0;
-            // }
         }
-        // let mut legs: [Leg; LEG_COUNT] = Default::default();
 
         Self {
             pos,
@@ -230,14 +220,6 @@ impl Spider {
             let mut min_dist = d(leg.origin_offset, mid, target);
             let mut min_mid = mid;
 
-            // TODO: use this instead of the `i` hack
-            // let target_dir = (leg.target - self.pos).normalize();
-            //
-            // let a = target_dir;
-            // let b = ideal_leg_dir;
-            // let signed_area = f32::signum(a.x * b.y - a.y * b.x);
-            // root_ui().label(leg.end, &format!("area {}", signed_area));
-
             for iter in 0..1000 {
                 // TODO: use leg count
                 let sign = if i < 4 { -1.0 } else { 1.0 };
@@ -266,7 +248,6 @@ impl Spider {
             BODY_COLOR,
         );
 
-        // let colors = [RED, GREEN, BLUE, YELLOW, VIOLET, BLACK, PINK, PURPLE, BEIGE];
         let colors = [YELLOW, ORANGE, RED, PURPLE, BLUE, GRAY, DARKGRAY, BLACK];
 
         for (i, leg) in self.legs.iter_mut().enumerate() {

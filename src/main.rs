@@ -21,11 +21,6 @@ async fn main() {
         screen_height() / 2.0 / RESIZE_RATIO,
     );
 
-    // let mut spider_npc =
-    // for _ in 0..20 {
-    //     spider_npc.move_towards(Vec2::new(-1.0, 0.0));
-    // }
-
     let mut spiders = vec![
         Spider::new(1.0, screen_center + Vec2::new(-300.0, 0.0), false),
         Spider::new(0.5, screen_center + Vec2::new(200.0, 0.0), true),
