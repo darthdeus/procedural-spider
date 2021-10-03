@@ -18,6 +18,8 @@ const EAT_DISTANCE: f32 = 40.0;
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    let mut music_playing: bool = false;
+
     let screen_center = Vec2::new(
         screen_width() / 2.0 / RESIZE_RATIO,
         screen_height() / 2.0 / RESIZE_RATIO,
@@ -54,24 +56,6 @@ async fn main() {
 
     let sound = macroquad::audio::load_sound_from_bytes(soundtrack).await;
     let nom_sfx = macroquad::audio::load_sound_from_bytes(nom_wav).await;
-
-    match sound {
-        Ok(sound) => {
-            println!("playing music");
-
-            macroquad::audio::play_sound(
-                sound,
-                macroquad::audio::PlaySoundParams {
-                    looped: true,
-                    volume: 1.0,
-                },
-            );
-        }
-
-        Err(err) => {
-            println!("Failed to load sound {}", err);
-        }
-    }
 
     let crt_material =
         load_material(shaders::VERTEX, shaders::FRAGMENT, Default::default()).unwrap();
@@ -126,6 +110,30 @@ async fn main() {
         }
         if is_key_down(KeyCode::D) {
             move_dir.x += 1.0;
+        }
+
+        if move_dir.length() > 0.0 {
+            if !music_playing {
+                music_playing = true;
+
+                match sound {
+                    Ok(sound) => {
+                        println!("playing music");
+
+                        macroquad::audio::play_sound(
+                            sound,
+                            macroquad::audio::PlaySoundParams {
+                                looped: true,
+                                volume: 1.0,
+                            },
+                        );
+                    }
+
+                    Err(ref err) => {
+                        println!("Failed to load sound {}", err);
+                    }
+                }
+            }
         }
 
         if debug_keyboard_override {
