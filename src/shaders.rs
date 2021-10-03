@@ -1,4 +1,4 @@
-/// Shaders taken from https://github.com/ollej/rusty-aquarium
+/// Shaders heavily inspired by https://github.com/ollej/rusty-aquarium
 pub const FRAGMENT: &str = r#"#version 100
         precision lowp float;
         varying vec4 color;
@@ -30,26 +30,9 @@ pub const FRAGMENT: &str = r#"#version 100
         }
 
         void main() {
-//             vec4 pos = vec4(
-//                 floor(position.x / 16.0) * 16.0,
-//                 floor(position.y / 16.0) * 16.0,
-//                 floor(position.z / 16.0) * 16.0,
-//                 1
-//             );
-// 
-
-
             vec2 crtUV = CRTCurveUV(uv);
 
-            // vec2 pixel_uv = floor(uv / 16.0) * 16.0;
-
             vec3 res = texture2D(Texture, uv.xy).rgb * color.rgb;
-            // vec3 res = texture2D(Texture, pixel_uv).rgb * color.rgb;
-
-            // if (crtUV.x < 0.0 || crtUV.x > 1.0 || crtUV.y < 0.0 || crtUV.y > 1.0)
-            // {
-            //     res = vec3(0.0, 0.0, 0.0);
-            // }
 
             DrawVignette(res, uv);
             DrawScanline(res, uv);

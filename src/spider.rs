@@ -65,20 +65,6 @@ pub struct Spider {
     pub debug_draw_joints: bool,
 }
 
-// fn leg_origin_dir(face_dir: Vec2, i: usize) -> Vec2 {
-//     let angle = LEG_DEGREE * (i + 1) as f32;
-//
-//     if unsafe { USE_QUAT } {
-//         Mat3::from_rotation_z(angle).transform_vector2(face_dir)
-//     } else {
-//         // let total_angle = angle + face_dir.angle_between(Vec2::new(0.0, 1.0));
-//         // let total_angle = angle + Vec2::new(1.0, 0.0).angle_between(face_dir);
-//         let total_angle = angle + Vec2::new(1.0, 0.0).angle_between(face_dir);
-//
-//         Vec2::new(f32::cos(total_angle), f32::sin(total_angle)).normalize()
-//     }
-// }
-
 impl Spider {
     pub fn new(scale: f32, pos: Vec2, spider_type: SpiderType) -> Self {
         let face_dir = Vec2::new(0.0, 1.0);
@@ -136,7 +122,6 @@ impl Spider {
 
         if self.spider_type == SpiderType::Left {
             perp_vec = perp_vec.perp().perp().normalize();
-            // root_ui().label(self.pos, &format!("perp {:#.2?}", self));
         }
 
         if unsafe { DEBUG_AI_LABELS } {
@@ -145,11 +130,6 @@ impl Spider {
 
             root_ui().label(self.pos, &format!("below {} left {}", below, left));
         }
-
-        //         if below && left {
-        //             perp_vec = perp_vec.perp().perp();
-        //
-        //         }
 
         const LIMIT: f32 = 100.0;
 
@@ -192,7 +172,6 @@ impl Spider {
 
         for (i, leg) in self.legs.iter_mut().enumerate() {
             let leg_dir = leg.end - self.pos;
-            // let ideal_leg_dir = leg_origin_dir(self.face_dir, i).normalize();
             let ideal_leg_dir = face_transform.transform_vector2(leg.ideal_leg_dir);
 
             if leg_dir.length() > 2.0 * LEG_LENGTH {
@@ -229,7 +208,6 @@ impl Spider {
             let mut min_mid = mid;
 
             for iter in 0..1000 {
-                // TODO: use leg count
                 let sign = if i < 4 { -1.0 } else { 1.0 };
 
                 mid += sign * norm.normalize() * 0.1 * iter as f32;
@@ -291,19 +269,6 @@ impl Spider {
             draw_circle(lerp_mid.x, lerp_mid.y, 4.0 * self.scale, c1);
             draw_circle(lerp_end.x, lerp_end.y, 4.0 * self.scale, c2);
         }
-
-        // draw_line(self.pos.x, self.pos.y, min_mid.x, min_mid.y, t, color);
-        // draw_line(
-        //     self.pos.x + min_mid.x,
-        //     self.pos.y + min_mid.y,
-        //     target.x,
-        //     target.y,
-        //     t,
-        //     color,
-        // );
-        // draw_line(self.pos.x, self.pos.y, leg.x, leg.y, t, color);
-
-        // draw_line(self.pos.x, self.pos.y, leg.x, leg.y, t, color);
     }
 }
 

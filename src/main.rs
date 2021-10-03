@@ -187,9 +187,6 @@ async fn main() {
             });
         }
 
-        // const SCR_W: f32 = 100.0;
-        // const SCR_H: f32 = 60.0;
-
         let render_screen_w = screen_width() / RESIZE_RATIO;
         let render_screen_h = screen_height() / RESIZE_RATIO;
 
@@ -268,11 +265,6 @@ async fn main() {
         for spider in to_spawn.into_iter() {
             spiders.push(spider);
         }
-
-        // draw_texture(main_render_target.texture, 0.0, 0.0, NICE_PINK);
-        // clear_background(NICE_PINK);
-        // draw_texture_ex()
-        // let screen_data: Image = get_screen_data();
 
         next_frame().await;
     }
