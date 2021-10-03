@@ -17,22 +17,18 @@ fn window_conf() -> Conf {
 async fn main() {
     let mut spider = Spider::new();
 
-    let crt_material = load_material(
-        shaders::crt::VERTEX,
-        shaders::crt::FRAGMENT,
-        Default::default(),
-    )
-    .unwrap();
+    let crt_material =
+        load_material(shaders::VERTEX, shaders::FRAGMENT, Default::default()).unwrap();
 
     let move_min = spider.pos - Vec2::new(20.0, 20.0);
     let move_max = spider.pos + Vec2::new(20.0, 20.0);
-
 
     let mut i = 0.0;
 
     let mut debug_keyboard_override = false;
     let mut use_shader = false;
     let mut auto_move_spider = true;
+    let mut debug_ui = false;
 
     let main_render_target = render_target(screen_width() as u32, screen_height() as u32);
     main_render_target.texture.set_filter(FilterMode::Nearest);
@@ -58,6 +54,10 @@ async fn main() {
 
         let mut move_dir = Vec2::new(0.0, 0.0);
 
+        if is_key_pressed(KeyCode::Tab) {
+            debug_ui = !debug_ui;
+        }
+
         if is_key_down(KeyCode::W) {
             move_dir.y -= 1.0;
         }
@@ -78,25 +78,27 @@ async fn main() {
             spider.move_towards(move_dir);
         }
 
-        egui_macroquad::ui(|ctx| {
-            egui::Window::new("Window").show(ctx, |ui| {
-                ui.label("macroquaaad");
-                ui.add(egui::Slider::new(&mut spider.pos.x, move_min.x..=move_max.x).text("x"));
-                ui.add(egui::Slider::new(&mut spider.pos.y, move_min.y..=move_max.y).text("y"));
-                ui.add(
-                    egui::Slider::new(&mut spider.max_leg_angle, 0.05..=3.0).text("Max leg angle:"),
-                );
+        if debug_ui {
+            egui_macroquad::ui(|ctx| {
+                egui::Window::new("Debug UI").show(ctx, |ui| {
+                    ui.add(egui::Slider::new(&mut spider.pos.x, move_min.x..=move_max.x).text("x"));
+                    ui.add(egui::Slider::new(&mut spider.pos.y, move_min.y..=move_max.y).text("y"));
+                    ui.add(
+                        egui::Slider::new(&mut spider.max_leg_angle, 0.05..=3.0)
+                            .text("Max leg angle:"),
+                    );
 
-                ui.checkbox(&mut use_shader, "Use shader");
-                ui.checkbox(&mut auto_move_spider, "Auto move spider");
-                ui.checkbox(&mut spider.debug_leg_angles, "Debug leg angles");
-                ui.checkbox(&mut spider.debug_color_legs, "Debug color legs");
-                ui.checkbox(&mut spider.debug_draw_joints, "Debug draw joints");
-                ui.checkbox(&mut debug_keyboard_override, "Debug keyboard override");
+                    ui.checkbox(&mut use_shader, "Use shader");
+                    ui.checkbox(&mut auto_move_spider, "Auto move spider");
+                    ui.checkbox(&mut spider.debug_leg_angles, "Debug leg angles");
+                    ui.checkbox(&mut spider.debug_color_legs, "Debug color legs");
+                    ui.checkbox(&mut spider.debug_draw_joints, "Debug draw joints");
+                    ui.checkbox(&mut debug_keyboard_override, "Debug keyboard override");
 
-                ui.label(format!("{:#.2?}", spider));
+                    ui.label(format!("{:#.2?}", spider));
+                });
             });
-        });
+        }
 
         // const SCR_W: f32 = 100.0;
         // const SCR_H: f32 = 60.0;
@@ -141,7 +143,10 @@ async fn main() {
         );
 
         gl_use_default_material();
-        egui_macroquad::draw();
+
+        if debug_ui {
+            egui_macroquad::draw();
+        }
 
         // draw_texture(main_render_target.texture, 0.0, 0.0, NICE_PINK);
         // clear_background(NICE_PINK);
