@@ -1,3 +1,13 @@
 ## Ludum Dare #49 entry
 
-[Some early gameplay](https://gfycat.com/velvetyobviousjoey)
+
+Small game where you play a big spider chasing small spiders. Each spider you catch makes you bigger!
+
+Controls with WSAD.
+
+![screenshot](screenshot.png)
+
+---
+
+Created with Rust and [Macroquad](https://macroquad.rs/)
+
