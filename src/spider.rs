@@ -1,6 +1,5 @@
 use crate::prelude::*;
 
-pub const RESIZE_RATIO: f32 = 1.0;
 const LEG_LENGTH: f32 = 64.0;
 
 const MOVE_SPEED: f32 = 30.0;
@@ -75,11 +74,7 @@ pub struct Spider {
 // }
 
 impl Spider {
-    pub fn new() -> Self {
-        let pos = Vec2::new(
-            screen_width() / 2.0 / RESIZE_RATIO,
-            screen_height() / 2.0 / RESIZE_RATIO,
-        );
+    pub fn new(pos: Vec2) -> Self {
 
         let face_dir = Vec2::new(0.0, 1.0);
 

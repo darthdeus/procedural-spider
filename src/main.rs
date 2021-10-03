@@ -1,4 +1,5 @@
 use crate::prelude::*;
+pub const RESIZE_RATIO: f32 = 1.0;
 
 mod prelude;
 mod shaders;
@@ -15,13 +16,23 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut spider = Spider::new();
+    let screen_center = Vec2::new(
+        screen_width() / 2.0 / RESIZE_RATIO,
+        screen_height() / 2.0 / RESIZE_RATIO,
+    );
+
+    let mut spider_player = Spider::new(screen_center + Vec2::new(-300.0, 0.0));
+
+    let mut spider_npc = Spider::new(screen_center + Vec2::new(200.0, 0.0));
+    for _ in 0..20 {
+        spider_npc.move_towards(Vec2::new(-1.0, 0.0));
+    }
 
     let crt_material =
         load_material(shaders::VERTEX, shaders::FRAGMENT, Default::default()).unwrap();
 
-    let move_min = spider.pos - Vec2::new(20.0, 20.0);
-    let move_max = spider.pos + Vec2::new(20.0, 20.0);
+    let move_min = spider_player.pos - Vec2::new(20.0, 20.0);
+    let move_max = spider_player.pos + Vec2::new(20.0, 20.0);
 
     let mut i = 0.0;
 
@@ -49,7 +60,7 @@ async fn main() {
             Vec2::new(4.0 * f32::sin(i), 2.0 * f32::cos(i)) * 20.0
         } else {
             let mouse = mouse_position();
-            Vec2::new(mouse.0, mouse.1) - spider.pos
+            Vec2::new(mouse.0, mouse.1) - spider_player.pos
         };
 
         let mut move_dir = Vec2::new(0.0, 0.0);
@@ -73,29 +84,29 @@ async fn main() {
         }
 
         if debug_keyboard_override {
-            spider.move_towards(new_pos);
+            spider_player.move_towards(new_pos);
         } else {
-            spider.move_towards(move_dir);
+            spider_player.move_towards(move_dir);
         }
 
         if debug_ui {
             egui_macroquad::ui(|ctx| {
                 egui::Window::new("Debug UI").show(ctx, |ui| {
-                    ui.add(egui::Slider::new(&mut spider.pos.x, move_min.x..=move_max.x).text("x"));
-                    ui.add(egui::Slider::new(&mut spider.pos.y, move_min.y..=move_max.y).text("y"));
+                    ui.add(egui::Slider::new(&mut spider_player.pos.x, move_min.x..=move_max.x).text("x"));
+                    ui.add(egui::Slider::new(&mut spider_player.pos.y, move_min.y..=move_max.y).text("y"));
                     ui.add(
-                        egui::Slider::new(&mut spider.max_leg_angle, 0.05..=3.0)
+                        egui::Slider::new(&mut spider_player.max_leg_angle, 0.05..=3.0)
                             .text("Max leg angle:"),
                     );
 
                     ui.checkbox(&mut use_shader, "Use shader");
                     ui.checkbox(&mut auto_move_spider, "Auto move spider");
-                    ui.checkbox(&mut spider.debug_leg_angles, "Debug leg angles");
-                    ui.checkbox(&mut spider.debug_color_legs, "Debug color legs");
-                    ui.checkbox(&mut spider.debug_draw_joints, "Debug draw joints");
+                    ui.checkbox(&mut spider_player.debug_leg_angles, "Debug leg angles");
+                    ui.checkbox(&mut spider_player.debug_color_legs, "Debug color legs");
+                    ui.checkbox(&mut spider_player.debug_draw_joints, "Debug draw joints");
                     ui.checkbox(&mut debug_keyboard_override, "Debug keyboard override");
 
-                    ui.label(format!("{:#.2?}", spider));
+                    ui.label(format!("{:#.2?}", spider_player));
                 });
             });
         }
@@ -121,7 +132,8 @@ async fn main() {
         });
 
         clear_background(NICE_PINK);
-        spider.draw();
+        spider_player.draw();
+        spider_npc.draw();
 
         set_default_camera();
         clear_background(BLACK);
