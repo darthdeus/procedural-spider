@@ -19,6 +19,7 @@ const EXTRA_LEG_SPACING: usize = 2;
 /// Degree of rotation per leg.
 const LEG_DEGREE: f32 = std::f32::consts::TAU / (LEG_COUNT + EXTRA_LEG_SPACING) as f32;
 
+pub static mut DEBUG_AI_LABELS: bool = false;
 // pub static mut USE_QUAT: bool = false;
 
 // return face_dir;
@@ -48,6 +49,7 @@ pub struct Leg {
 pub struct Spider {
     pub pos: Vec2,
     velocity: Vec2,
+    inverse_run_dir: bool,
 
     scale: f32,
 
@@ -76,8 +78,7 @@ pub struct Spider {
 // }
 
 impl Spider {
-    pub fn new(scale: f32, pos: Vec2) -> Self {
-
+    pub fn new(scale: f32, pos: Vec2, inverse_run_dir: bool) -> Self {
         let face_dir = Vec2::new(0.0, 1.0);
 
         let mut legs = Vec::new();
@@ -112,6 +113,7 @@ impl Spider {
         Self {
             pos,
             velocity: Vec2::ZERO,
+            inverse_run_dir,
 
             scale,
 
@@ -131,6 +133,45 @@ impl Spider {
         Mat3::from_rotation_z(Vec2::new(0.0, 1.0).angle_between(self.face_dir))
     }
 
+    pub fn run_away_from(&mut self, enemy: Vec2) {
+        let mut perp_vec = (self.pos - enemy).perp().normalize();
+
+        if self.inverse_run_dir {
+            perp_vec = perp_vec.perp().perp().normalize();
+            // root_ui().label(self.pos, &format!("perp {:#.2?}", self));
+        }
+
+        if unsafe { DEBUG_AI_LABELS } {
+            let below = enemy.y > self.pos.y;
+            let left = enemy.x < self.pos.x;
+
+            root_ui().label(self.pos, &format!("below {} left {}", below, left));
+        }
+
+        //         if below && left {
+        //             perp_vec = perp_vec.perp().perp();
+        //
+        //         }
+
+        const LIMIT: f32 = 100.0;
+
+        if self.pos.x <= LIMIT {
+            perp_vec.x = 1.0;
+        }
+        if self.pos.x >= (screen_width() - LIMIT) {
+            perp_vec.x = -1.0;
+        }
+
+        if self.pos.y <= LIMIT {
+            perp_vec.y = 1.0;
+        }
+        if self.pos.y >= (screen_height() - LIMIT) {
+            perp_vec.y = -1.0;
+        }
+
+        self.move_towards(perp_vec);
+    }
+
     pub fn move_towards(&mut self, move_dir: Vec2) {
         if move_dir.length() > 0.1 {
             self.velocity += move_dir.normalize() * MOVE_SPEED * get_frame_time();
@@ -143,7 +184,7 @@ impl Spider {
 
         if self.velocity.length() > 0.01 {
             self.face_dir = self.face_dir.lerp(self.velocity.normalize(), 0.5);
-        //     self.face_dir = (0.8 * self.face_dir + 0.2 * self.velocity.normalize()).normalize();
+            //     self.face_dir = (0.8 * self.face_dir + 0.2 * self.velocity.normalize()).normalize();
         }
 
         let face_transform = self.face_transform();
