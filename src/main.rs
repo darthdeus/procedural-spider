@@ -21,9 +21,9 @@ async fn main() {
         screen_height() / 2.0 / RESIZE_RATIO,
     );
 
-    let mut spider_player = Spider::new(screen_center + Vec2::new(-300.0, 0.0));
+    let mut spider_player = Spider::new(1.0, screen_center + Vec2::new(-300.0, 0.0));
 
-    let mut spider_npc = Spider::new(screen_center + Vec2::new(200.0, 0.0));
+    let mut spider_npc = Spider::new(0.5, screen_center + Vec2::new(200.0, 0.0));
     for _ in 0..20 {
         spider_npc.move_towards(Vec2::new(-1.0, 0.0));
     }
@@ -116,13 +116,6 @@ async fn main() {
 
         let render_screen_w = screen_width() / RESIZE_RATIO;
         let render_screen_h = screen_height() / RESIZE_RATIO;
-
-        set_camera(&Camera2D {
-            zoom: vec2(1.0 / render_screen_w * 2.0, -1.0 / render_screen_h * 2.0),
-            target: vec2(render_screen_w / 2.0, render_screen_h / 2.0),
-            render_target: Some(main_render_target),
-            ..Default::default()
-        });
 
         set_camera(&Camera2D {
             zoom: vec2(1.0 / render_screen_w * 2.0, -1.0 / render_screen_h * 2.0),

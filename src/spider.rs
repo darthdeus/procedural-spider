@@ -49,6 +49,8 @@ pub struct Spider {
     pub pos: Vec2,
     velocity: Vec2,
 
+    scale: f32,
+
     face_dir: Vec2,
     legs: Vec<Leg>,
 
@@ -74,7 +76,7 @@ pub struct Spider {
 // }
 
 impl Spider {
-    pub fn new(pos: Vec2) -> Self {
+    pub fn new(scale: f32, pos: Vec2) -> Self {
 
         let face_dir = Vec2::new(0.0, 1.0);
 
@@ -110,6 +112,8 @@ impl Spider {
         Self {
             pos,
             velocity: Vec2::ZERO,
+
+            scale,
 
             face_dir,
             legs,
@@ -207,11 +211,11 @@ impl Spider {
     }
 
     pub fn draw(&mut self) {
-        draw_circle(self.pos.x, self.pos.y, R, BODY_COLOR);
+        draw_circle(self.pos.x, self.pos.y, R * self.scale, BODY_COLOR);
         draw_circle(
-            self.pos.x - self.face_dir.x * BUTT_OFFSET,
-            self.pos.y - self.face_dir.y * BUTT_OFFSET,
-            BUTT_RADIUS,
+            self.pos.x - self.face_dir.x * BUTT_OFFSET * self.scale,
+            self.pos.y - self.face_dir.y * BUTT_OFFSET * self.scale,
+            BUTT_RADIUS * self.scale,
             BODY_COLOR,
         );
 
@@ -224,19 +228,19 @@ impl Spider {
             leg.lerp_end = leg.lerp_end.lerp(leg.end, lerp_speed);
 
             let color = if self.debug_color_legs {
-                //             let mut color = Color::new(COLOR.r, COLOR.g, COLOR.b, COLOR.a);
-                //
-                //             color.r -= i as f32 / 20.0;
-                //             color.g -= i as f32 / 20.0;
-                //             color.b -= i as f32 / 20.0;
-
                 colors[i]
             } else {
                 BODY_COLOR
             };
 
-            line(self.pos + leg.origin_offset, leg.lerp_mid, T, color);
-            line(leg.lerp_mid, leg.lerp_end, T, color);
+            let lerp_mid_vec = (leg.lerp_mid - self.pos) * self.scale;
+            let lerp_end_vec = (leg.lerp_end - self.pos) * self.scale;
+
+            let lerp_mid = self.pos + lerp_mid_vec;
+            let lerp_end = self.pos + lerp_end_vec;
+
+            line(self.pos + leg.origin_offset, lerp_mid, T, color);
+            line(lerp_mid, lerp_end, T, color);
 
             let (c1, c2) = if self.debug_draw_joints {
                 (GREEN, BLUE)
@@ -244,8 +248,8 @@ impl Spider {
                 (BODY_COLOR, BODY_COLOR)
             };
 
-            draw_circle(leg.lerp_mid.x, leg.lerp_mid.y, 4.0, c1);
-            draw_circle(leg.lerp_end.x, leg.lerp_end.y, 4.0, c2);
+            draw_circle(lerp_mid.x, lerp_mid.y, 4.0 * self.scale, c1);
+            draw_circle(lerp_end.x, lerp_end.y, 4.0 * self.scale, c2);
         }
 
         // draw_line(self.pos.x, self.pos.y, min_mid.x, min_mid.y, t, color);
