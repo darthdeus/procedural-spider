@@ -11,3 +11,4 @@ egui = "*"
 egui-macroquad = "*"
 glam = "*"
 rand = "*"
+getrandom = { version = "*", features = ["js"] }
