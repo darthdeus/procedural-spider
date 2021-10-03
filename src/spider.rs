@@ -7,6 +7,7 @@ const BUTT_OFFSET: f32 = 32.0;
 const BUTT_RADIUS: f32 = 32.0;
 
 const BODY_COLOR: Color = Color::new(0.8, 0.4245, 0.4, 1.0);
+const PLAYER_BODY_COLOR: Color = Color::new(0.7, 0.3245, 0.3, 1.0);
 const R: f32 = 16.0;
 const T: f32 = 8.0;
 
@@ -19,6 +20,13 @@ const EXTRA_LEG_SPACING: usize = 2;
 const LEG_DEGREE: f32 = std::f32::consts::TAU / (LEG_COUNT + EXTRA_LEG_SPACING) as f32;
 
 pub static mut DEBUG_AI_LABELS: bool = false;
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum SpiderType {
+    Player,
+    Left,
+    Right,
+}
 
 #[derive(Default, Debug)]
 pub struct Leg {
@@ -43,7 +51,7 @@ pub struct Leg {
 pub struct Spider {
     pub pos: Vec2,
     velocity: Vec2,
-    inverse_run_dir: bool,
+    spider_type: SpiderType,
 
     scale: f32,
 
@@ -72,7 +80,7 @@ pub struct Spider {
 // }
 
 impl Spider {
-    pub fn new(scale: f32, pos: Vec2, inverse_run_dir: bool) -> Self {
+    pub fn new(scale: f32, pos: Vec2, spider_type: SpiderType) -> Self {
         let face_dir = Vec2::new(0.0, 1.0);
 
         let mut legs = Vec::new();
@@ -103,7 +111,7 @@ impl Spider {
         Self {
             pos,
             velocity: Vec2::ZERO,
-            inverse_run_dir,
+            spider_type,
 
             scale,
 
@@ -126,7 +134,7 @@ impl Spider {
     pub fn run_away_from(&mut self, enemy: Vec2) {
         let mut perp_vec = (self.pos - enemy).perp().normalize();
 
-        if self.inverse_run_dir {
+        if self.spider_type == SpiderType::Left {
             perp_vec = perp_vec.perp().perp().normalize();
             // root_ui().label(self.pos, &format!("perp {:#.2?}", self));
         }
@@ -240,12 +248,14 @@ impl Spider {
     }
 
     pub fn draw(&mut self) {
-        draw_circle(self.pos.x, self.pos.y, R * self.scale, BODY_COLOR);
+        let body_color = if self.spider_type == SpiderType::Player { PLAYER_BODY_COLOR } else { BODY_COLOR };
+
+        draw_circle(self.pos.x, self.pos.y, R * self.scale, body_color);
         draw_circle(
             self.pos.x - self.face_dir.x * BUTT_OFFSET * self.scale,
             self.pos.y - self.face_dir.y * BUTT_OFFSET * self.scale,
             BUTT_RADIUS * self.scale,
-            BODY_COLOR,
+            body_color,
         );
 
         let colors = [YELLOW, ORANGE, RED, PURPLE, BLUE, GRAY, DARKGRAY, BLACK];
@@ -258,7 +268,7 @@ impl Spider {
             let color = if self.debug_color_legs {
                 colors[i]
             } else {
-                BODY_COLOR
+                body_color
             };
 
             let lerp_mid_vec = (leg.lerp_mid - self.pos) * self.scale;
@@ -273,7 +283,7 @@ impl Spider {
             let (c1, c2) = if self.debug_draw_joints {
                 (GREEN, BLUE)
             } else {
-                (BODY_COLOR, BODY_COLOR)
+                (body_color, body_color)
             };
 
             draw_circle(lerp_mid.x, lerp_mid.y, 4.0 * self.scale, c1);
