@@ -50,8 +50,10 @@ async fn main() {
     ];
 
     let soundtrack = include_bytes!("soundtrack.wav");
+    let nom_wav = include_bytes!("nom-sfx.wav");
 
     let sound = macroquad::audio::load_sound_from_bytes(soundtrack).await;
+    let nom_sfx = macroquad::audio::load_sound_from_bytes(nom_wav).await;
 
     match sound {
         Ok(sound) => {
@@ -234,6 +236,22 @@ async fn main() {
                     screen_center + Vec2::new(rand::gen_range::<f32>(-200.0, 200.0), 0.0),
                     SpiderType::Left,
                 ));
+
+                match &nom_sfx {
+                    Ok(ref nom_sfx) => {
+                        macroquad::audio::play_sound(
+                            nom_sfx.clone(),
+                            macroquad::audio::PlaySoundParams {
+                                looped: false,
+                                volume: 1.0,
+                            },
+                        );
+                    }
+
+                    Err(err) => {
+                        println!("Failed to load sound {}", err);
+                    }
+                }
             }
 
             !too_close
