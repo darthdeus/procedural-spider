@@ -29,10 +29,10 @@ async fn main() {
     let mut spiders = vec![
         Spider::new(1.0, screen_center + Vec2::new(-300.0, 0.0), false),
         Spider::new(0.5, screen_center + Vec2::new(200.0, 0.0), true),
-        Spider::new(0.5, screen_center + Vec2::new(0.0, 200.0), false),
+        Spider::new(0.5, screen_center + Vec2::new(0.0, 100.0), false),
         Spider::new(0.5, screen_center + Vec2::new(0.0, -200.0), true),
-        Spider::new(0.5, screen_center + Vec2::new(0.0, 400.0), false),
-        Spider::new(0.5, screen_center + Vec2::new(0.0, -400.0), true),
+        Spider::new(0.5, screen_center + Vec2::new(0.0, 600.0), true),
+        Spider::new(0.5, screen_center + Vec2::new(0.0, -400.0), false),
     ];
 
     let crt_material =

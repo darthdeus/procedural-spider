@@ -184,7 +184,10 @@ impl Spider {
 
         if self.velocity.length() > 0.01 {
             self.face_dir = self.face_dir.lerp(self.velocity.normalize(), 0.5);
-            //     self.face_dir = (0.8 * self.face_dir + 0.2 * self.velocity.normalize()).normalize();
+            // Gets rid of NaN when face_dir == [0, 0]
+            if self.face_dir.length() < 0.01 {
+                self.face_dir = Vec2::new(1.0, 0.0);
+            }
         }
 
         let face_transform = self.face_transform();
@@ -218,7 +221,10 @@ impl Spider {
             let norm = mid.perp();
 
             let d = |origin: Vec2, a: Vec2, b: Vec2| {
-                f32::abs((origin - a).length() - LEG_LENGTH + (b - a).length() - LEG_LENGTH)
+                let d1 = (origin - a).length() - LEG_LENGTH;
+                let d2 = (b - a).length() - LEG_LENGTH;
+
+                f32::abs(d1 + d2)
             };
 
             let mut min_dist = d(leg.origin_offset, mid, target);
