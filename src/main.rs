@@ -14,6 +14,8 @@ fn window_conf() -> Conf {
     }
 }
 
+const EAT_DISTANCE: f32 = 40.0;
+
 #[macroquad::main(window_conf)]
 async fn main() {
     let screen_center = Vec2::new(
@@ -21,14 +23,30 @@ async fn main() {
         screen_height() / 2.0 / RESIZE_RATIO,
     );
 
-    let mut player_spider = Spider::new(1.0, screen_center + Vec2::new(-300.0, 0.0), SpiderType::Player);
+    let mut player_spider = Spider::new(
+        1.0,
+        screen_center + Vec2::new(-300.0, 0.0),
+        SpiderType::Player,
+    );
 
     let mut spiders = vec![
         Spider::new(0.5, screen_center + Vec2::new(200.0, 0.0), SpiderType::Left),
         Spider::new(0.5, screen_center + Vec2::new(0.0, 100.0), SpiderType::Left),
-        Spider::new(0.5, screen_center + Vec2::new(0.0, -200.0), SpiderType::Right),
-        Spider::new(0.5, screen_center + Vec2::new(0.0, 600.0), SpiderType::Right),
-        Spider::new(0.5, screen_center + Vec2::new(0.0, -400.0), SpiderType::Left),
+        Spider::new(
+            0.5,
+            screen_center + Vec2::new(0.0, -200.0),
+            SpiderType::Right,
+        ),
+        Spider::new(
+            0.5,
+            screen_center + Vec2::new(0.0, 600.0),
+            SpiderType::Right,
+        ),
+        Spider::new(
+            0.5,
+            screen_center + Vec2::new(0.0, -400.0),
+            SpiderType::Left,
+        ),
     ];
 
     let crt_material =
@@ -180,6 +198,27 @@ async fn main() {
 
         if debug_ui {
             egui_macroquad::draw();
+        }
+
+        let mut to_spawn = vec![];
+
+        spiders.retain(|spider| {
+            let too_close = (spider.pos - player_spider.pos).length() < EAT_DISTANCE;
+
+            if too_close {
+                player_spider.scale += 0.15;
+                to_spawn.push(Spider::new(
+                    0.5,
+                    screen_center + Vec2::new(rand::gen_range::<f32>(-200.0, 200.0), 0.0),
+                    SpiderType::Left,
+                ));
+            }
+
+            !too_close
+        });
+
+        for spider in to_spawn.into_iter() {
+            spiders.push(spider);
         }
 
         // draw_texture(main_render_target.texture, 0.0, 0.0, NICE_PINK);

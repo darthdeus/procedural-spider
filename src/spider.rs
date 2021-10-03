@@ -53,7 +53,7 @@ pub struct Spider {
     velocity: Vec2,
     spider_type: SpiderType,
 
-    scale: f32,
+    pub scale: f32,
 
     face_dir: Vec2,
     legs: Vec<Leg>,
@@ -277,8 +277,10 @@ impl Spider {
             let lerp_mid = self.pos + lerp_mid_vec;
             let lerp_end = self.pos + lerp_end_vec;
 
-            line(self.pos + leg.origin_offset, lerp_mid, T, color);
-            line(lerp_mid, lerp_end, T, color);
+            let w = T * self.scale;
+
+            line(self.pos + leg.origin_offset, lerp_mid, w, color);
+            line(lerp_mid, lerp_end, w, color);
 
             let (c1, c2) = if self.debug_draw_joints {
                 (GREEN, BLUE)
